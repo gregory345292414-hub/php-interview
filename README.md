@@ -22,8 +22,11 @@ Pick an action (`manager`, `reports`, `tree`) and an employee, by `id` or by ful
 | Direct reports of David Okafor | `http://localhost:8000/?action=reports&id=1002` |
 | Everyone below Tom Becker | `http://localhost:8000/?action=tree&name=Tom Becker` |
 
-The `tree` action returns each person with a `level`: 1 for direct reports,
-2 for their reports, and so on.
+The `tree` action returns a nested structure mirroring the org chart: each
+person has a `reports` array holding the people directly under them, plus a
+`level` (1 for direct reports, 2 for their reports, and so on). The traversal
+is done in SQL with a recursive CTE; PHP only folds the flat rows into the
+nested shape.
 
 Errors return JSON with a matching HTTP status: 400 for a bad/missing parameter,
 404 for an unknown employee.

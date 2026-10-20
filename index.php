@@ -96,8 +96,35 @@ function everyoneBelow(PDO $pdo, array $employee): array
         SELECT * FROM tree ORDER BY level, last_name, first_name'
     );
     $stmt->execute(['id' => $employee['id']]);
-    return $stmt->fetchAll();
+    return nestReports($stmt->fetchAll(), $employee['id']);
 }
+
+/**
+ * Fold the flat CTE rows into a nested tree: each person keeps their `level`
+ * and gains a `reports` array holding the people directly under them.
+ */
+function nestReports(array $rows, int $rootId): array
+{
+    $byId = [];
+    foreach ($rows as $row) {
+        $row['reports'] = [];
+        $byId[$row['id']] = $row;
+    }
+
+    $tree = [];
+    foreach ($byId as &$node) {
+        if ($node['manager_id'] === $rootId) {
+            $tree[] = &$node;
+        } else {
+            $byId[$node['manager_id']]['reports'][] = &$node;
+        }
+    }
+    unset($node);
+
+    return $tree;
+}
+
+
 
 // --- Routing ---
 
